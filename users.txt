@@ -1,0 +1,4 @@
+ana:anaaremere
+andrei:parola
+marius:parola
+constantin:parola
