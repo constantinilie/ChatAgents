@@ -4,3 +4,11 @@ target/
 logs/
 .DS_Store
 Thumbs.db
+
+.venv
+.env
+python-llm/.env
+python-llm/.venv/
+python-llm/venv/
+python-llm/__pycache__/
+python-llm/*.pyc

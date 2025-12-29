@@ -17,18 +17,23 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import java.util.Optional;
 
+
 public class ChatClientAgent extends Agent {
   private static final long serialVersionUID = 1L;
 
   private AID serverAID;
-
+  
   private String user;
   private String pass;
   private String op;
 
-  private final ConversationStore convs = new ConversationStore();
+  private ConversationStore convs;
   private ChatController ui;
   private ClientMessageHandler handler;
+  
+  private usv.llm.JadeLlmClient llmClient;
+
+
 
   @Override
   protected void setup() {
@@ -36,8 +41,10 @@ public class ChatClientAgent extends Agent {
     user = (args != null && args.length > 0) ? String.valueOf(args[0]) : getLocalName();
     pass = (args != null && args.length > 1) ? String.valueOf(args[1]) : "";
     op   = (args != null && args.length > 2) ? String.valueOf(args[2]) : "login";
-
+    
+    convs = new ConversationStore(user);
     handler = new ClientMessageHandler(this, user, convs);
+    llmClient = new usv.llm.JadeLlmClient(this);
 
     // Find server then auth
     addBehaviour(new TickerBehaviour(this, 500) {
@@ -45,6 +52,7 @@ public class ChatClientAgent extends Agent {
 
       @Override
       protected void onTick() {
+    	  
         if (serverAID != null) return;
 
         Optional<AID> found = DfUtil.findOne(myAgent, "chat-server");
@@ -54,7 +62,7 @@ public class ChatClientAgent extends Agent {
 
           send(ChatProtocol.auth(serverAID, op, user, pass));
           stop();
-        }
+        } 
       }
     });
 
@@ -66,16 +74,21 @@ public class ChatClientAgent extends Agent {
       public void action() {
         ACLMessage msg = receive();
         if (msg == null) { block(); return; }
+        
+        // Handle LLM replies first (before any other parsing/handling)
+        if (llmClient != null && llmClient.handleIncoming(msg)) {
+          return;
+        }
 
         usv.messages.MsgCodec.Parsed p = ChatProtocol.parse(msg);
         String type = p.type();
 
         if (ChatProtocol.AUTH_OK.equals(type)) {
-          openUiIfNeeded();
-          handler.setUi(ui);
-          handler.handle(msg); // will request users
-          return;
-        }
+            openUiIfNeeded();
+            handler.setUi(ui);
+            handler.handle(msg);
+            return;
+         }
 
         if (ChatProtocol.AUTH_FAIL.equals(type)) {
           final String reason = p.kv().get("reason");
@@ -108,19 +121,16 @@ public class ChatClientAgent extends Agent {
         convs.addLine(to, line);
         if (to.equals(convs.getActivePeer())) ui.appendLine(line);
       }
+      public void onPeerSelected(String peer) { }
+      public void onWindowClosed() { doDelete(); }
+    }, 
+      llmClient);
 
-      public void onPeerSelected(String peer) {
-        // No-op
-      }
-
-      public void onWindowClosed() {
-        doDelete();
-      }
-    });
 
     ui.show();
   }
 
+  
   @Override
   protected void takeDown() {
     try {

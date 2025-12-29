@@ -17,15 +17,20 @@ public final class ChatProtocol {
   public static final String AUTH = "AUTH";
   public static final String AUTH_OK = "AUTH_OK";
   public static final String AUTH_FAIL = "AUTH_FAIL";
-
   public static final String GET_USERS = "GET_USERS";
   public static final String USER_LIST = "USER_LIST";
-
   public static final String SEND_CHAT = "SEND_CHAT";
   public static final String CHAT_DELIVER = "CHAT_DELIVER";
-
   public static final String UNREGISTER = "UNREGISTER";
 
+  //LLM types
+  public static final String LLM_REQUEST = "LLM_REQUEST";
+  public static final String LLM_RESPONSE = "LLM_RESPONSE";
+  public static final String LLM_FAIL = "LLM_FAIL";
+
+  //LLM conversation id
+  public static final String CID_LLM = "llm";
+  
   // Conversation IDs
   public static final String CID_AUTH = "auth";
   public static final String CID_GET_USERS = "get-users";

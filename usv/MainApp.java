@@ -22,6 +22,14 @@ public class MainApp {
         new Object[] {}
     );
     server.start();
+    
+    AgentController llm = main.createNewAgent(
+	    "llm",
+	    "usv.agents.ChatLlmAgent",
+	    new Object[] {}
+	);
+	llm.start();
+
 
     javax.swing.SwingUtilities.invokeLater(new Runnable() {
       public void run() {

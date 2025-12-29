@@ -10,18 +10,23 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
+import usv.llm.LlmActions;
 
 public class ChatController {
 
   private final ChatWindow win;
   private final ConversationStore convs;
   private final ChatCallbacks cb;
+  private final LlmActions llm;
+  private String lastInputBeforeLlm = null;
 
-  public ChatController(ChatWindow win, ConversationStore convs, ChatCallbacks cb) {
+
+  public ChatController(ChatWindow win, ConversationStore convs, ChatCallbacks cb, LlmActions llm) {
     this.win = win;
     this.convs = convs;
     this.cb = cb;
-
+    this.llm = llm;
+    
     wire();
   }
 
@@ -75,10 +80,48 @@ public class ChatController {
           return;
         }
         if (text == null || text.trim().isEmpty()) return;
-
+        // Reset undo when sending message
+        lastInputBeforeLlm = null;
+        win.setUndoEnabled(false);
+        
         if (cb != null) cb.onSend(to, text);
       }
     });
+    
+ // Undo button
+    win.onUndo(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        if (lastInputBeforeLlm == null) {
+          win.setUndoEnabled(false);
+          return;
+        }
+        win.setInputText(lastInputBeforeLlm);
+        lastInputBeforeLlm = null;
+        win.setUndoEnabled(false);
+      }
+    });
+
+    // Correct
+    win.onCorrect(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        runLlmAndReplaceInput("correct");
+      }
+    });
+
+    // Rephrase
+    win.onRephrase(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        runLlmAndReplaceInput("rephrase");
+      }
+    });
+
+    // Translate
+    win.onTranslate(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        runLlmAndReplaceInput("translate");
+      }
+    });
+
 
     // Close -> callback
     win.addWindowListener(new WindowAdapter() {
@@ -92,4 +135,44 @@ public class ChatController {
       }
     });
   }
+  
+  private void runLlmAndReplaceInput(final String op) {
+	  if (llm == null) {
+	    appendLine("[system] LLM not configured.");
+	    return;
+	  }
+
+	  final String current = win.getInputText();
+	  if (current == null || current.trim().isEmpty()) return;
+
+	  // Save for undo (single step)
+	  lastInputBeforeLlm = current;
+	  win.setUndoEnabled(true);
+
+	  new Thread(new Runnable() {
+	    public void run() {
+	      try {
+	        final String out;
+	        if ("translate".equals(op)) {
+	          String tgt = win.getTranslateTargetLangCode();
+	          out = llm.translate(current, tgt);
+	        } else {
+	          out = llm.run(op, current);
+	        }
+
+	        SwingUtilities.invokeLater(new Runnable() {
+	          public void run() { win.setInputText(out); }
+	        });
+
+	      } catch (final Exception ex) {
+	        SwingUtilities.invokeLater(new Runnable() {
+	          public void run() { appendLine("[system] LLM error: " + ex.getMessage()); }
+	        });
+	      }
+	    }
+	  }, "llm-" + op).start();
+	}
+
+  
+
 }
