@@ -14,7 +14,7 @@ app = FastAPI(title="Gemini LLM Service")
 
 # Pick a default model. Example from docs: gemini-2.5-flash
 # You can change this later (e.g., gemini-2.5-pro).
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 
 class Operation(str, Enum):
     translate = "translate"
