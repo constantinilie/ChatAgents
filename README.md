@@ -44,12 +44,9 @@ Acest proiect implementeaza un ecosistem de agenti de tip chat (server-client) f
 ## Cerinte:
 - Java instalat si disponibil in PATH (`java -version`)
 - Python 3 instalat si disponibil in PATH (`python --version` sau `py -3 --version`)
-- Configurare `.env` pentru Gemini (Microserviciul Python citeste cheia Gemini din fisierul `.env`.)
-### Pasii pentru configurare .env:
-1) Mergi in folderul `python-llm/`
-2) Copiaza continutul fisierului:
-   - `python-llm/.env.example` -> `python-llm/.env`
-3) Deschide `python-llm/.env` si seteaza cheia
 
 ## **Pornire proiect**
-- se deschide fisierul `runWindows.bat` (acesta verifica daca e java si python instalat, creeaza mediul virtual, instaleaza dependentele, porneste serverul si aplicatia java)
+- se deschide fisierul `runWindows.bat`
+- se adauga o cheie API Gemini cand apare prompt-ul `Introduceti cheia GEMINI_API_KEY` 
+(script-ul .bat verifica daca e java si python instalat, creeaza mediul virtual, instaleaza dependentele, creeaza .env cu cheia oferita, porneste serverul si aplicatia java)
+
