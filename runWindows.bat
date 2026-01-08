@@ -73,15 +73,31 @@ if exist "%REQ%" (
 )
 
 REM -----------------------
-REM Check .env
+REM Check and Set .env (API KEY)
 REM -----------------------
 if not exist "%ENVFILE%" (
-  echo Missing python-llm\.env
-  echo Copy python-llm\.env.example to python-llm\.env and set GEMINI_API_KEY
-  pause
-  exit /b 1
-)
+    echo.
+    echo [CONFIGURARE] Fisierul .env lipseste.
+    set /p API_KEY="Introduceti cheia GEMINI_API_KEY: "
+    
+    if "!API_KEY!"=="" (
+        echo Eroare: Nu ati introdus nicio cheia.
+        pause
+        exit /b 1
+    )
 
+    echo GEMINI_API_KEY=!API_KEY! > "%ENVFILE%"
+    echo Fisierul .env a fost creat cu succes la %ENVFILE%.
+    echo.
+) else (
+    echo [INFO] Fisierul .env exista deja. 
+    set /p RASPUNS="Doriti sa schimbati cheia API actuala(GEMINI)? (y/n): "
+    if /I "!RASPUNS!"=="y" (
+        set /p API_KEY="Introduceti noua cheia GEMINI_API_KEY: "
+        echo GEMINI_API_KEY=!API_KEY! > "%ENVFILE%"
+        echo Cheia a fost actualizata.
+    )
+)
 REM -----------------------
 REM Start Python LLM service
 REM -----------------------
